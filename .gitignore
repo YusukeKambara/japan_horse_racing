@@ -4,6 +4,9 @@ README.html
 # Virtual env folder
 env/
 
+# Setting for vscode
+.vscode/
+
 # Local history files
 .history/
 
