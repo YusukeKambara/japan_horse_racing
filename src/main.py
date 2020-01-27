@@ -28,7 +28,7 @@ def schedule():
     "--place", "-p", is_flag=True,
     help="""
         Getting place data or not.
-        If you cannot set this flag, you get only schedule with grade.
+        If you cannot set this flag, you get only place.
     """
 )
 def get(year, place):
