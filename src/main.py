@@ -2,7 +2,7 @@ import io
 import os
 import click
 from datetime import datetime
-from commands import schedule as commands_schedule
+from src.commands import schedule as commands_schedule
 
 def main():
     cmd()

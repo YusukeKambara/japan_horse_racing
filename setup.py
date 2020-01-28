@@ -19,7 +19,7 @@ setup(
     author="Yusuke Kambara",
     license="MIT",
 
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", "docs", "examples")),
     test_suite = "tests.test.suite",
     install_requires=install_requirements,
     entry_points={
