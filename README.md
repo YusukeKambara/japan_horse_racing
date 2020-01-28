@@ -15,7 +15,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 What things you need to install the software and how to install them
 
-[!INCLUDE[requirements text file](requirements.txt)]
+[requirements text file](requirements.txt)
 
 ### Installing
 
