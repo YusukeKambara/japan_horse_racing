@@ -9,7 +9,11 @@ class TestIo(unittest.TestCase):
     Arguments:
         unittest {[type]} -- [description]
     """
-    
+
+    @classmethod
+    def setUpClass(cls):
+        print("*" * 80 + "\nStart to test [datasource.jra] module\n" + "*" * 80)
+
     def test_get_race_name_list_with_invalid_argument_year(self):
         """Testing to occurred error if the argument's year is invaild
         """
@@ -27,7 +31,7 @@ class TestIo(unittest.TestCase):
         assert race_name_data[0]["date"].year == current_year
         assert race_name_data[0]["title"] != ""
 
-    def test_get_race_name_list_with_place_optino(self):
+    def test_get_race_name_list_with_place_option(self):
         """Testing to be able to get the place to open the event
         """
         current_year = datetime.now().year

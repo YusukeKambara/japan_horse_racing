@@ -9,7 +9,11 @@ class TestSchedule(unittest.TestCase):
     Arguments:
         unittest {[type]} -- [description]
     """
-    
+
+    @classmethod
+    def setUpClass(cls):
+        print("*" * 80 + "\nStart to test [commands.schedule] module\n" + "*" * 80)
+
     def test_get_with_invaild_year_race_name(self):
         """Testing to occurred error if the argument's year is invaild
         """

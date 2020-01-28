@@ -12,6 +12,10 @@ class TestMain(unittest.TestCase):
         unittest {[type]} -- [description]
     """
 
+    @classmethod
+    def setUpClass(cls):
+        print("*" * 80 + "\nStart to test [main] module\n" + "*" * 80)
+
     def setUp(self):
         self.runner = CliRunner()
 
