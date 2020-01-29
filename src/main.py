@@ -86,5 +86,27 @@ def get_result(name, start_year, start_month, end_year, end_month):
     print(results)
     return results
 
+@race.command()
+@click.option(
+    "--name", "-n", type=str,
+    help="Target name to get the race details"
+)
+@click.option(
+    "--year", "-y", type=int, default=datetime.now().year,
+    help="Target year to get the race details"
+)
+def get_details(name, year):
+    """Getting the race details of JRA horse racing
+    """
+    params = {
+        netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
+        netkeiba.url_params.WORD: name,
+        netkeiba.url_params.START_YEAR: year,
+        netkeiba.url_params.END_YEAR: year
+    }
+    details = commands_race.get_details(params)
+    print(details)
+    return details
+
 if __name__ == "__main__":
     main()

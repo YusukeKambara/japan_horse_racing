@@ -110,6 +110,38 @@ def get_race_result(params):
     # Return the DataFrame
     return df
         
-def get_race_details(params):
-    params = {key: params[key] for key in params if params[key]}
-    params[url_params.PID] = pid_list.RACE
+def get_race_details(details_url):
+    r = requests_retry_session().get(details_url)
+    soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
+    parsed_table = soup.find_all("table")[0]
+    df = pd.read_html(str(parsed_table))[0]
+    if len(RACE_DETAILS_HEADER) == len(df.columns):
+        df.columns = RACE_DETAILS_HEADER
+        # Adding the url of details pages
+        df["race_details_url"] = details_url
+        df["horse_details_url"] = [
+            "".join([
+                BASE_URL + link.get("href")
+                for link in tag.find_all("a") 
+                if re.match("\/horse\/[0-9]+", link.get("href"))
+            ])
+            for tag in parsed_table.find_all("tr")
+        ][1:]
+        df["jockey_details_url"] = [
+            "".join([
+                BASE_URL + link.get("href")
+                for link in tag.find_all("a") 
+                if re.match("\/jockey\/[0-9]+", link.get("href"))
+            ])
+            for tag in parsed_table.find_all("tr")
+        ][1:]
+        df["trainer_details_url"] = [
+            "".join([
+                BASE_URL + link.get("href")
+                for link in tag.find_all("a") 
+                if re.match("\/trainer\/[0-9]+", link.get("href"))
+            ])
+            for tag in parsed_table.find_all("tr")
+        ][1:]
+    return df
+
