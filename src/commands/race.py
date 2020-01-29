@@ -10,6 +10,7 @@ def get_details(params):
     """Getting the race details on JRA with argument's params
     """
     df = netkeiba.get_race_result(params)
+    df = df.drop(netkeiba.RACE_RESULT_REMOVE_HEADER, axis=1)
     return pd.merge(
         df,
         pd.concat(
