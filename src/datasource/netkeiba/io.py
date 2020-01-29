@@ -42,13 +42,16 @@ url_params = URL_PARAMS(
     SORT_KEY = "sort_key",
     SORT_TYPE = "sort_type"
 )
-PID_LIST = namedtuple("PID_LIST", ("RACE", "RACE_LIST", "JOCKEY", "HORSE", "TRAINER"))
+PID_LIST = namedtuple("PID_LIST", ("RACE", "RACE_LIST", "JOCKEY", "JOCKEY_LIST", "HORSE", "HORSE_LIST", "TRAINER", "TRAINER_LIST"))
 pid_list = PID_LIST(
     RACE = "race",
     RACE_LIST = "race_list",
-    JOCKEY = "jockey_list",
-    HORSE = "horse_list",
-    TRAINER = "trainer_list"
+    JOCKEY = "jockey",
+    JOCKEY_LIST = "jockey_list",
+    HORSE = "horse",
+    HORSE_LIST = "horse_list",
+    TRAINER = "trainer",
+    TRAINER_LIST = "trainer_list"
 )
 
 ##############################################################################
@@ -76,6 +79,7 @@ def requests_retry_session(
 def get_race_result(params):
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
+    params[url_params.LIST] = 100
     if url_params.WORD in params.keys():
         params[url_params.WORD] = str(
             params[url_params.WORD].encode("EUC-JP")
@@ -106,3 +110,6 @@ def get_race_result(params):
     # Return the DataFrame
     return df
         
+def get_race_details(params):
+    params = {key: params[key] for key in params if params[key]}
+    params[url_params.PID] = pid_list.RACE

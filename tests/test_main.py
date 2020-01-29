@@ -1,8 +1,10 @@
 import datetime
 import logging
 import unittest
+import pandas as pd
 from click.testing import CliRunner
-from src import main
+import main
+from datasource.netkeiba import io as netkeiba
 
 
 class TestMain(unittest.TestCase):
@@ -29,7 +31,7 @@ class TestMain(unittest.TestCase):
     def test_main_non_defined_command(self):
         """Testing for the main function with non-defined command at first layer
         """
-        result = self.runner.invoke(main.cmd, ["nondifined"])
+        result = self.runner.invoke(main.cmd, ["nondefined"])
         assert result.exit_code == 2
         assert "No such command" in result.output
 
@@ -43,7 +45,7 @@ class TestMain(unittest.TestCase):
     def test_main_schedule_command_with_non_defined_command(self):
         """Testing for the main function with schedule command with non-defined command
         """
-        result = self.runner.invoke(main.schedule, ["nondifined"])
+        result = self.runner.invoke(main.schedule, ["nondefined"])
         assert result.exit_code == 2
         assert "No such command" in result.output
 
@@ -53,3 +55,24 @@ class TestMain(unittest.TestCase):
         result = self.runner.invoke(main.schedule, ["get"])
         assert result.exit_code == 0
         assert type(eval(result.output)) is list
+
+    def test_main_race_command_without_child_command(self):
+        """Testing for the main function with race command without child command
+        """
+        result = self.runner.invoke(main.cmd, ["race"])
+        assert result.exit_code == 0
+        assert "Second layer sub-command group" in result.output
+
+    def test_main_race_command_with_non_defined_command(self):
+        """Testing for the main function with race command with non-defined command
+        """
+        result = self.runner.invoke(main.race, ["nondefined"])
+        assert result.exit_code == 2
+        assert "No such command" in result.output
+
+    def test_main_race_command_with_get_command(self):
+        """Testing for the main function with race command with get command
+        """
+        result = self.runner.invoke(main.race, ["get-result"])
+        assert result.exit_code == 0
+        assert all([header in result.output for header in netkeiba.RACE_RESULT_HEADER])

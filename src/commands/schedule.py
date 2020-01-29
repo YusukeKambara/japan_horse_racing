@@ -1,4 +1,4 @@
-from src.datasource.jra import io as jra
+from datasource.jra import io as jra
 
 def get(year, is_place):
     """Getting the schedule on JRA with argument's year
