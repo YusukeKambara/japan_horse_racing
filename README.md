@@ -19,15 +19,12 @@ What things you need to install the software and how to install them
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
 ```lang=shell
-pip install -r requirements.txt
+python setup.py install
 ```
 
-And repeat
+### Testing
 
 ```lang=shell
-until finished
+python setup.py test
+```

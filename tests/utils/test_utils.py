@@ -8,7 +8,11 @@ class TestUtils(unittest.TestCase):
     Arguments:
         unittest {[type]} -- [description]
     """
-    
+
+    @classmethod
+    def setUpClass(cls):
+        print("*" * 80 + "\nStart to test [utils] module\n" + "*" * 80)
+
     def test_get_project_root(self):
         """Testing to be able to get the project root pathname
         """
