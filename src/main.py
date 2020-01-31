@@ -52,7 +52,7 @@ def get(year, place):
 
 @race.command()
 @click.option(
-    "--name", "-n", type=int,
+    "--name", "-n", type=str,
     help="Target name to get the race result"
 )
 @click.option(

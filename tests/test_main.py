@@ -70,9 +70,17 @@ class TestMain(unittest.TestCase):
         assert result.exit_code == 2
         assert "No such command" in result.output
 
-    def test_main_race_command_with_get_command(self):
-        """Testing for the main function with race command with get command
+    def test_main_race_command_with_get_result_command(self):
+        """Testing for the main function with race command with get-result command
         """
         result = self.runner.invoke(main.race, ["get-result"])
         assert result.exit_code == 0
         assert all([header in result.output for header in netkeiba.RACE_RESULT_HEADER])
+
+    def test_main_race_command_with_get_details_command(self):
+        """Testing for the main function with race command with get-details command
+        """
+        result = self.runner.invoke(main.race, ["get-details"])
+        assert result.exit_code == 0
+        print(result.exit_code)
+        assert all([header in result.output for header in netkeiba.JOINED_RESULT_DETAILS_HEADER])

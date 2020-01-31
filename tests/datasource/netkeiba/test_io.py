@@ -60,3 +60,26 @@ class TestIo(unittest.TestCase):
         assert type(df) == pd.DataFrame
         assert len(df) > 0
         assert any([2019 == dt.year for dt in df["date"].to_list()])
+
+    def test_get_race_details_with_correct_url(self):
+        """Testing to get the DataFrame of horse racing details data
+        """
+        details_url = "https://db.netkeiba.com/race/201906050811/"
+        df = netkeiba.get_race_details(details_url)
+        assert not (df is None)
+        assert type(df) == pd.DataFrame
+        assert len(df) > 0
+
+    def test_get_race_details_with_wrong_url(self):
+        """Testing to get the None value not a DataFrame
+        """
+        details_url = "https://db.netkeiba.com/race/202206050811/"
+        df = netkeiba.get_race_details(details_url)
+        assert df is None
+
+    def test_get_race_details_with_wrong_url(self):
+        """Testing to occurred error to set wrong URL string
+        """
+        details_url = "test/test/test"
+        with self.assertRaises(requests.exceptions.MissingSchema):
+            df = netkeiba.get_race_details(details_url)
