@@ -112,8 +112,8 @@ def get_race_result(params):
         lambda x: re.search(r"G[1-3]", x).group().replace("G", "")
         if re.search(r"G[1-3]", x) else None
     )
-    df["race_name"] = df["race_name"].apply(
-        lambda x: re.sub(r"[(]G[1-3][)]|[(]OP[)]", "", x)
+    df["race_name"] = df["race_name"].replace(
+        "[(]G[1-3][)]|[(]OP[)]", "", regex=True
     )
     # Convert type of date column
     df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
