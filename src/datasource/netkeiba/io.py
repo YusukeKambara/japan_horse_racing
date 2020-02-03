@@ -25,7 +25,7 @@ RACE_DETAILS_HEADER = ["arrival_order", "frame_number", "horse_number", "horse_n
 HORSE_DETAILS_HEADER_10_ITEMS = ["birthday", "trainer", "owner", "producer", "origin", "trading_price", "winnings", "results", "main_race", "close_relatives"]
 HORSE_DETAILS_HEADER_11_ITEMS = ["birthday", "trainer", "owner", "one_bite", "producer", "origin", "trading_price", "winnings", "results", "main_race", "close_relatives"]
 # Define the returning DataFrame header
-JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name", "distance", "horses", "cource_situation", "arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "trainer_name", "race_details_url", "horse_details_url", "jockey_details_url", "trainer_details_url"]
+JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name", "grade", "distance", "horses", "cource_situation", "arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "trainer_name", "race_details_url", "horse_details_url", "jockey_details_url", "trainer_details_url"]
 # Returning DataFrame column types
 JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "cource_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex_age": "str", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "str", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
@@ -93,6 +93,7 @@ def get_race_result(params):
     parsed_table = soup.find_all("table")[0]
     df = pd.read_html(str(parsed_table))[0]
     if not (len(RACE_RESULT_HEADER) == len(df.columns)):
+        print("Header items count has a difference.")
         return None
     df.columns = RACE_RESULT_HEADER
     # Remove needless charactor in the [place] column
@@ -106,6 +107,14 @@ def get_race_result(params):
         ])
         for tag in parsed_table.find_all("tr")
     ][1:]
+    # Separate the complex data columns
+    df["grade"] = df["race_name"].apply(
+        lambda x: re.search(r"G[1-3]", x).group().replace("G", "")
+        if re.search(r"G[1-3]", x) else None
+    )
+    df["race_name"] = df["race_name"].apply(
+        lambda x: re.sub(r"[(]G[1-3][)]|[(]OP[)]", "", x)
+    )
     # Convert type of date column
     df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
     df["year"] = df["date"].apply(lambda x: x.year)
