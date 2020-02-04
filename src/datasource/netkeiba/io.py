@@ -25,9 +25,9 @@ RACE_DETAILS_HEADER = ["arrival_order", "frame_number", "horse_number", "horse_n
 HORSE_DETAILS_HEADER_10_ITEMS = ["birthday", "trainer", "owner", "producer", "origin", "trading_price", "winnings", "results", "main_race", "close_relatives"]
 HORSE_DETAILS_HEADER_11_ITEMS = ["birthday", "trainer", "owner", "one_bite", "producer", "origin", "trading_price", "winnings", "results", "main_race", "close_relatives"]
 # Define the returning DataFrame header
-JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name", "grade", "distance", "horses", "cource_situation", "arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "trainer_name", "race_details_url", "horse_details_url", "jockey_details_url", "trainer_details_url"]
+JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name", "grade", "distance", "horses", "cource_situation", "arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "horse_changed_weight", "trainer_name", "race_details_url", "horse_details_url", "jockey_details_url", "trainer_details_url"]
 # Returning DataFrame column types
-JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "cource_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex_age": "str", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "str", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
+JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "cource_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex_age": "str", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
 URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "LIST", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE"))
 url_params = URL_PARAMS(
@@ -119,7 +119,7 @@ def get_race_result(params):
     cource_kind_dict = {"芝": "turf", "ダ": "dirt", "障": "hurdle"}
     df["race_category"] = df["distance"].apply(
         lambda x: cource_kind_dict[x[:1]]
-        if not x[:1].isdecimal() else "-"
+        if not x[:1].isdecimal() else None
     )
     df["distance"] = df["distance"].apply(
         lambda x: x[1:] if not x[:1].isdecimal() else x
@@ -138,6 +138,19 @@ def get_race_details(details_url):
     df = pd.read_html(str(parsed_table))[0]
     if len(RACE_DETAILS_HEADER) == len(df.columns):
         df.columns = RACE_DETAILS_HEADER
+        # Separate the complex data columns
+        df["horse_changed_weight"] = df["horse_weight"].apply(
+            lambda x: int(
+                re.search(r"[(][+-]*[0-9]*[)]", x).group().replace(
+                    "(", ""
+                ).replace(")", "") 
+                if re.search(r"[(][+-]*[0-9]*[)]", x) else 0
+                or 0
+            )
+        )
+        df["horse_weight"] = df["horse_weight"].replace(
+            "[(][+-]*[0-9]*[)]", "", regex=True
+        )
         # Adding the url of details pages
         df["race_details_url"] = details_url
         df["horse_details_url"] = [
