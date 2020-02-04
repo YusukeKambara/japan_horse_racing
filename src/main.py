@@ -56,11 +56,11 @@ def get(year, place):
     help="Target name to get the race result"
 )
 @click.option(
-    "--start_year", "-sy", type=int,
+    "--start_year", "-sy", type=int, default=1985,
     help="Target year to start to get the race result"
 )
 @click.option(
-    "--start_month", "-sm", type=int,
+    "--start_month", "-sm", type=int, default=1,
     help="Target month to start to get the race result"
 )
 @click.option(
@@ -92,11 +92,11 @@ def get_result(name, start_year, start_month, end_year, end_month):
     help="Target name to get the race details"
 )
 @click.option(
-    "--year", "-y", type=int,
+    "--year", "-y", type=int, default=1985,
     help="Target year to get the race details"
 )
 @click.option(
-    "--month", "-m", type=int,
+    "--month", "-m", type=int, default=1,
     help="Target month to get the race details"
 )
 def get_details(name, year, month):
