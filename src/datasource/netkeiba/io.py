@@ -93,8 +93,6 @@ def get_race_result(params):
     parsed_table = soup.find_all("table")[0]
     df = pd.read_html(str(parsed_table))[0]
     if not (len(RACE_RESULT_HEADER) == len(df.columns)):
-        print("Header items count has a difference.")
-        print(df.columns)
         return None
     df.columns = RACE_RESULT_HEADER
     # Remove needless charactor in the [place] column
@@ -128,7 +126,7 @@ def get_race_result(params):
     df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
     df["year"] = df["date"].apply(lambda x: x.year)
     # Return the DataFrame
-    return df.drop(RACE_RESULT_REMOVE_HEADER, axis=1)
+    return df
         
 def get_race_details(details_url):
     r = requests_retry_session().get(details_url)
