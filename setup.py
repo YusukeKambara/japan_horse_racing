@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from setuptools import setup, find_packages
-__VERSION__ = "0.2"
+from _version import __VERSION__
 
 sys.path.append("./src")
 sys.path.append("./tests")
