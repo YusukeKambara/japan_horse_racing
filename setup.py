@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from setuptools import setup, find_packages
+__VERSION__ = "0.2"
 
 sys.path.append("./src")
 sys.path.append("./tests")
@@ -13,7 +14,7 @@ with open("README.md") as f:
 
 setup(
     name="japan_horse_racing",
-    version="0.0.1",
+    version=__VERSION__,
     description="ForecGetting the horse racing result in Japan.",
     long_description=long_description,
     author="Yusuke Kambara",
