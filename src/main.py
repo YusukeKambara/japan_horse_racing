@@ -59,36 +59,42 @@ def get(year, place):
     "--track", "-t", multiple=True,
     type=click.Choice(list(netkeiba.track_list._asdict().keys())),
     help="""
-    Track name to get the race result
-    Can be selected multiple values
+    [multiple] Track name to get the race result
     """
 )
 @click.option(
     "--place", "-p", multiple=True,
     type=click.Choice(list(netkeiba.place_list._asdict().keys())),
     help="""
-    Place name to get the race result
-    Can be selected multiple values
+    [multiple] Place name to get the race result
     """
 )
 @click.option(
-    "--start_year", "-sy", type=int, default=datetime.now().year,
+    "--course-situation", "-cs", multiple=True,
+    type=click.Choice(list(netkeiba.course_situation_list._asdict().keys())),
+    help="""
+    [multiple] Course situation to get the race result
+    """
+)
+@click.option(
+    "--start-year", "-sy", type=int, default=datetime.now().year,
     help="Year to start to get the race result"
 )
 @click.option(
-    "--start_month", "-sm", type=int,
+    "--start-month", "-sm", type=int,
     help="Month to start to get the race result"
 )
 @click.option(
-    "--end_year", "-ey", type=int,
+    "--end-year", "-ey", type=int,
     help="Year to end to get the race result"
 )
 @click.option(
-    "--end_month", "-em", type=int,
+    "--end-month", "-em", type=int,
     help="Month to end to get the race result"
 )
 def get_result(
-    name, track, place, start_year, start_month, end_year, end_month
+    name, track, place, course_situation,
+    start_year, start_month, end_year, end_month
 ):
     """Getting the race result of JRA horse racing
     """
@@ -97,6 +103,7 @@ def get_result(
         netkeiba.url_params.WORD: name,
         netkeiba.url_params.TRACK: track,
         netkeiba.url_params.PLACE: place,
+        netkeiba.url_params.COURSE_SITUATION: course_situation,
         netkeiba.url_params.START_YEAR: start_year,
         netkeiba.url_params.START_MONTH: start_month,
         netkeiba.url_params.END_YEAR: end_year,

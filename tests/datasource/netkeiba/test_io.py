@@ -34,7 +34,7 @@ class TestIo(unittest.TestCase):
         assert all(["有馬記念" in name for name in df["race_name"].to_list()])
 
     def test_get_race_result_with_track_param(self):
-        """Testing to get the DataFrame with word parameters
+        """Testing to get the DataFrame with track parameters
         """
         params = {
             netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
@@ -48,7 +48,7 @@ class TestIo(unittest.TestCase):
         assert all(["dirt" in name for name in df["race_category"].to_list()])
 
     def test_get_race_result_with_place_param(self):
-        """Testing to get the DataFrame with word parameters
+        """Testing to get the DataFrame with place parameters
         """
         params = {
             netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
@@ -60,6 +60,20 @@ class TestIo(unittest.TestCase):
         assert type(df) == pd.DataFrame
         assert len(df) > 0
         assert all(["京都" in name for name in df["place"].to_list()])
+
+    def test_get_race_result_with_course_situation_param(self):
+        """Testing to get the DataFrame with course situation parameters
+        """
+        params = {
+            netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
+            netkeiba.url_params.START_YEAR: 2019,
+            netkeiba.url_params.COURSE_SITUATION: ["HEAVY_HOLDING"]
+        }
+        df = netkeiba.get_race_result(params)
+        assert not (df is None)
+        assert type(df) == pd.DataFrame
+        assert len(df) > 0
+        assert all(["不" in name for name in df["course_situation"].to_list()])
 
     def test_get_race_result_with_start_year_params(self):
         """Testing to get the DataFrame with start-year parameters

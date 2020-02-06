@@ -17,7 +17,7 @@ MAX_RETRY_COUNT = 3
 # Datasource URL
 BASE_URL = "https://db.netkeiba.com"
 # Use for getting race result
-RACE_RESULT_HEADER = ["date", "place", "weather", "race_index", "race_name", "movie", "distance", "horses", "cource_situation", "winning_time", "pace", "winning_horse", "jockey", "trainer", "second_horse", "third_horse"]
+RACE_RESULT_HEADER = ["date", "place", "weather", "race_index", "race_name", "movie", "distance", "horses", "course_situation", "winning_time", "pace", "winning_horse", "jockey", "trainer", "second_horse", "third_horse"]
 RACE_RESULT_REMOVE_HEADER = ["race_index", "movie", "winning_time", "pace", "winning_horse", "jockey", "trainer", "second_horse", "third_horse"]
 # Use for getting race details
 RACE_DETAILS_HEADER = ["arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "trainer_name"]
@@ -25,16 +25,17 @@ RACE_DETAILS_HEADER = ["arrival_order", "frame_number", "horse_number", "horse_n
 HORSE_DETAILS_HEADER_10_ITEMS = ["birthday", "trainer", "owner", "producer", "origin", "trading_price", "winnings", "results", "main_race", "close_relatives"]
 HORSE_DETAILS_HEADER_11_ITEMS = ["birthday", "trainer", "owner", "one_bite", "producer", "origin", "trading_price", "winnings", "results", "main_race", "close_relatives"]
 # Define the returning DataFrame header
-JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name", "grade", "distance", "horses", "cource_situation", "arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex", "horse_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "horse_changed_weight", "trainer_name", "race_details_url", "horse_details_url", "jockey_details_url", "trainer_details_url"]
+JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name", "grade", "distance", "horses", "course_situation", "arrival_order", "frame_number", "horse_number", "horse_name", "horse_sex", "horse_age", "loaf_weight", "jockey_name", "time", "arrival_difference", "odds", "favorite", "horse_weight", "horse_changed_weight", "trainer_name", "race_details_url", "horse_details_url", "jockey_details_url", "trainer_details_url"]
 # Returning DataFrame column types
-JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "cource_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex": "str", "horse_age": "int", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
+JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "course_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex": "str", "horse_age": "int", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
-URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
+URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
 url_params = URL_PARAMS(
     PID = "pid",
     WORD = "word",
     TRACK = "track[]",
     PLACE = "jyo[]",
+    COURSE_SITUATION = "baba[]",
     START_YEAR = "start_year",
     START_MONTH = "start_mon",
     END_YEAR = "end_year",
@@ -74,6 +75,13 @@ place_list = PLACE_LIST(
     HANSHIN = "09",
     KOKURA = "10"
 )
+COURSE_SITUATION_LIST = namedtuple("COURSE_SITUATION_LIST", ("GOOD", "GOOD_TO_SOFT", "SOFT_YIELDING", "HEAVY_HOLDING"))
+course_situation_list = COURSE_SITUATION_LIST(
+    GOOD = "1",
+    GOOD_TO_SOFT = "2",
+    SOFT_YIELDING = "3",
+    HEAVY_HOLDING = "4"
+)
 
 ##############################################################################
 # Functions for corresponding to retry
@@ -101,6 +109,7 @@ def get_race_result(params):
     # Create URL parameters for getting horse racing results
     params_track = None
     params_place = None
+    params_course_situation = None
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
     params[url_params.LIST] = 100
@@ -121,11 +130,19 @@ def get_race_result(params):
             for val in params[url_params.PLACE]
         ])
         del params[url_params.PLACE]
+    if url_params.COURSE_SITUATION in params.keys():
+        params_course_situation = "&".join([
+            url_params.COURSE_SITUATION + "=" + eval("course_situation_list." + val)
+            for val in params[url_params.COURSE_SITUATION]
+        ])
+        del params[url_params.COURSE_SITUATION]
     req_url = BASE_URL + "/?" + urllib.parse.urlencode(params)
     if params_track:
         req_url += "&" + params_track
     if params_place:
         req_url += "&" + params_place
+    if params_course_situation:
+        req_url += "&" + params_course_situation
     # Get the response by using the converted URL
     r = requests_retry_session().get(req_url)
     soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
