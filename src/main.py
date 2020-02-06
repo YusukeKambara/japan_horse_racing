@@ -53,30 +53,39 @@ def get(year, place):
 @race.command()
 @click.option(
     "--name", "-n", type=str,
-    help="Target name to get the race result"
+    help="Race name to get the race result"
+)
+@click.option(
+    "--track", "-t", multiple=True,
+    type=click.Choice(list(netkeiba.track_list._asdict().keys())),
+    help="""
+    Track name to get the race result
+    Can be selected multiple values
+    """
 )
 @click.option(
     "--start_year", "-sy", type=int, default=datetime.now().year,
-    help="Target year to start to get the race result"
+    help="Year to start to get the race result"
 )
 @click.option(
     "--start_month", "-sm", type=int, default=datetime.now().month,
-    help="Target month to start to get the race result"
+    help="Month to start to get the race result"
 )
 @click.option(
     "--end_year", "-ey", type=int,
-    help="Target year to end to get the race result"
+    help="Year to end to get the race result"
 )
 @click.option(
     "--end_month", "-em", type=int,
-    help="Target month to end to get the race result"
+    help="Month to end to get the race result"
 )
-def get_result(name, start_year, start_month, end_year, end_month):
+def get_result(name, track, start_year, start_month, end_year, end_month):
     """Getting the race result of JRA horse racing
     """
     params = {
         netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
         netkeiba.url_params.WORD: name,
+        netkeiba.url_params.TRACK: track,
         netkeiba.url_params.START_YEAR: start_year,
         netkeiba.url_params.START_MONTH: start_month,
         netkeiba.url_params.END_YEAR: end_year,
