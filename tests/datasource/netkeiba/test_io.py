@@ -47,6 +47,20 @@ class TestIo(unittest.TestCase):
         assert len(df) > 0
         assert all(["dirt" in name for name in df["race_category"].to_list()])
 
+    def test_get_race_result_with_place_param(self):
+        """Testing to get the DataFrame with word parameters
+        """
+        params = {
+            netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
+            netkeiba.url_params.START_YEAR: 2019,
+            netkeiba.url_params.PLACE: ["KYOTO"]
+        }
+        df = netkeiba.get_race_result(params)
+        assert not (df is None)
+        assert type(df) == pd.DataFrame
+        assert len(df) > 0
+        assert all(["京都" in name for name in df["place"].to_list()])
+
     def test_get_race_result_with_start_year_params(self):
         """Testing to get the DataFrame with start-year parameters
         """
