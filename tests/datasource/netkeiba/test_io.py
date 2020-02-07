@@ -82,6 +82,13 @@ class TestIo(unittest.TestCase):
         # But currently, the column doesn't exists to judge the race conditions
         pass
 
+    def test_get_race_result_with_horse_age_param(self):
+        """Testing to get the DataFrame with horse age parameters
+        """
+        # In the future, I create this testing code.
+        # But currently, the column doesn't exists to judge the horse age
+        pass
+
     def test_get_race_result_with_start_year_params(self):
         """Testing to get the DataFrame with start-year parameters
         """
