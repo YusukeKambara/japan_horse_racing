@@ -75,6 +75,13 @@ class TestIo(unittest.TestCase):
         assert len(df) > 0
         assert all(["不" in name for name in df["course_situation"].to_list()])
 
+    def test_get_race_result_with_race_conditions_param(self):
+        """Testing to get the DataFrame with race conditions parameters
+        """
+        # In the future, I create this testing code.
+        # But currently, the column doesn't exists to judge the race conditions
+        pass
+
     def test_get_race_result_with_start_year_params(self):
         """Testing to get the DataFrame with start-year parameters
         """
