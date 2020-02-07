@@ -29,7 +29,7 @@ JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name",
 # Returning DataFrame column types
 JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "course_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex": "str", "horse_age": "int", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
-URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
+URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
 url_params = URL_PARAMS(
     PID = "pid",
     WORD = "word",
@@ -38,6 +38,7 @@ url_params = URL_PARAMS(
     COURSE_SITUATION = "baba[]",
     RACE_CONDITIONS = "jyoken[]",
     HORSE_AGE = "barei[]",
+    GRADE = "grade[]",
     START_YEAR = "start_year",
     START_MONTH = "start_mon",
     END_YEAR = "end_year",
@@ -101,6 +102,19 @@ horse_age_list = HORSE_AGE_LIST(
     OVER_THREE = "13",
     OVER_FOUR = "14"
 )
+GRADE_LIST = namedtuple("GRADE_LIST", ("G1", "G2", "G3", "OP", "MIL16", "MIL10", "MIL5", "NEW", "NON_VICTORY", "NON_RACE"))
+grade_list = GRADE_LIST(
+    G1 = "1",
+    G2 = "2",
+    G3 = "3",
+    OP = "4",
+    MIL16 = "5",
+    MIL10 = "6",
+    MIL5 = "7",
+    NEW = "8",
+    NON_VICTORY = "9",
+    NON_RACE = "10"
+)
 
 ##############################################################################
 # Functions for corresponding to retry
@@ -131,6 +145,7 @@ def get_race_result(params):
     params_course_situation = None
     params_race_conditions = None
     params_horse_age = None
+    params_grade = None
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
     params[url_params.LIST] = 100
@@ -169,6 +184,12 @@ def get_race_result(params):
             for val in params[url_params.HORSE_AGE]
         ])
         del params[url_params.HORSE_AGE]
+    if url_params.GRADE in params.keys():
+        params_grade = "&".join([
+            url_params.GRADE + "=" + eval("grade_list." + val)
+            for val in params[url_params.GRADE]
+        ])
+        del params[url_params.GRADE]
     # Create the requesting URL by using above params
     req_url = BASE_URL + "/?" + urllib.parse.urlencode(params)
     if params_track:
@@ -181,6 +202,8 @@ def get_race_result(params):
         req_url += "&" + params_race_conditions
     if params_horse_age:
         req_url += "&" + params_horse_age
+    if params_grade:
+        req_url += "&" + params_grade
     # Get the response by using the converted URL
     r = requests_retry_session().get(req_url)
     soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
