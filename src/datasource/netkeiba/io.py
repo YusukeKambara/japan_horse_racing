@@ -29,7 +29,7 @@ JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name",
 # Returning DataFrame column types
 JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "course_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex": "str", "horse_age": "int", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
-URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
+URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "DISTANCE_FROM", "DISTANCE_TO", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
 url_params = URL_PARAMS(
     PID = "pid",
     WORD = "word",
@@ -39,12 +39,14 @@ url_params = URL_PARAMS(
     RACE_CONDITIONS = "jyoken[]",
     HORSE_AGE = "barei[]",
     GRADE = "grade[]",
+    DISTANCE_FROM = "kyori_min",
+    DISTANCE_TO = "kyori_max",
     START_YEAR = "start_year",
     START_MONTH = "start_mon",
     END_YEAR = "end_year",
     END_MONTH = "end_mon",
     PAGE = "page",
-    SORT_KEY = "sort_key",
+    SORT_KEY = "sort",
     SORT_TYPE = "sort_type",
     LIST = "list"
 )
@@ -148,6 +150,7 @@ def get_race_result(params):
     params_grade = None
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
+    params[url_params.SORT_KEY] = "name"
     params[url_params.LIST] = 100
     if url_params.WORD in params.keys():
         params[url_params.WORD] = str(

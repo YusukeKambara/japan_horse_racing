@@ -67,8 +67,13 @@ class TestIo(unittest.TestCase):
         params = {
             netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
             netkeiba.url_params.START_YEAR: 2019,
+            netkeiba.url_params.TRACK: ["DIRT"],
             netkeiba.url_params.COURSE_SITUATION: ["HEAVY_HOLDING"]
         }
+        # [TODO]
+        # In case of track is hurdle, possibility we get the SOFT_YIELDING data,
+        # even if we set the search condition to HEAVY_HOLDING.
+        # So, I check only dirt data.
         df = netkeiba.get_race_result(params)
         assert not (df is None)
         assert type(df) == pd.DataFrame
@@ -78,6 +83,7 @@ class TestIo(unittest.TestCase):
     def test_get_race_result_with_race_conditions_param(self):
         """Testing to get the DataFrame with race conditions parameters
         """
+        # [TODO]
         # In the future, I create this testing code.
         # But currently, the column doesn't exists to judge the race conditions
         pass
@@ -85,6 +91,7 @@ class TestIo(unittest.TestCase):
     def test_get_race_result_with_horse_age_param(self):
         """Testing to get the DataFrame with horse age parameters
         """
+        # [TODO]
         # In the future, I create this testing code.
         # But currently, the column doesn't exists to judge the horse age
         pass
@@ -102,6 +109,34 @@ class TestIo(unittest.TestCase):
         assert type(df) == pd.DataFrame
         assert len(df) > 0
         assert all(["2" in name for name in df["grade"].to_list()])
+
+    def test_get_race_result_with_distance_from_param(self):
+        """Testing to get the DataFrame with distance_from parameters
+        """
+        params = {
+            netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
+            netkeiba.url_params.START_YEAR: 2019,
+            netkeiba.url_params.DISTANCE_FROM: 3000
+        }
+        df = netkeiba.get_race_result(params)
+        assert not (df is None)
+        assert type(df) == pd.DataFrame
+        assert len(df) > 0
+        assert all([int(val) >= 3000 for val in df["distance"].to_list()])
+
+    def test_get_race_result_with_distance_to_param(self):
+        """Testing to get the DataFrame with distance_from parameters
+        """
+        params = {
+            netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
+            netkeiba.url_params.START_YEAR: 2019,
+            netkeiba.url_params.DISTANCE_TO: 2000
+        }
+        df = netkeiba.get_race_result(params)
+        assert not (df is None)
+        assert type(df) == pd.DataFrame
+        assert len(df) > 0
+        assert all([int(val) <= 2000 for val in df["distance"].to_list()])
 
     def test_get_race_result_with_start_year_params(self):
         """Testing to get the DataFrame with start-year parameters
