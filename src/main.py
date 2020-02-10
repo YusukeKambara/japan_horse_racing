@@ -53,30 +53,92 @@ def get(year, place):
 @race.command()
 @click.option(
     "--name", "-n", type=str,
-    help="Target name to get the race result"
+    help="Race name to get the race result"
 )
 @click.option(
-    "--start_year", "-sy", type=int, default=datetime.now().year,
-    help="Target year to start to get the race result"
+    "--track", "-t", multiple=True,
+    type=click.Choice(list(netkeiba.track_list._asdict().keys())),
+    help="""
+    [multiple] Track name to get the race result
+    """
 )
 @click.option(
-    "--start_month", "-sm", type=int, default=datetime.now().month,
-    help="Target month to start to get the race result"
+    "--place", "-p", multiple=True,
+    type=click.Choice(list(netkeiba.place_list._asdict().keys())),
+    help="""
+    [multiple] Place name to get the race result
+    """
 )
 @click.option(
-    "--end_year", "-ey", type=int,
-    help="Target year to end to get the race result"
+    "--course-situation", "-cs", multiple=True,
+    type=click.Choice(list(netkeiba.course_situation_list._asdict().keys())),
+    help="""
+    [multiple] Course situation to get the race result
+    """
 )
 @click.option(
-    "--end_month", "-em", type=int,
-    help="Target month to end to get the race result"
+    "--race-conditions", "-rs", multiple=True,
+    type=click.Choice(list(netkeiba.race_conditions_list._asdict().keys())),
+    help="""
+    [multiple] Race conditions to get the race result
+    """
 )
-def get_result(name, start_year, start_month, end_year, end_month):
+@click.option(
+    "--horse-age", "-ha", multiple=True,
+    type=click.Choice(list(netkeiba.horse_age_list._asdict().keys())),
+    help="""
+    [multiple] Horse age to get the race result
+    """
+)
+@click.option(
+    "--grade", "-g", multiple=True,
+    type=click.Choice(list(netkeiba.grade_list._asdict().keys())),
+    help="""
+    [multiple] Grade to get the race result
+    """
+)
+@click.option(
+    "--distance-from", "-df", type=int,
+    help="Minimum distance to get the race result"
+)
+@click.option(
+    "--distance-to", "-dt", type=int,
+    help="Maximum distance to get the race result"
+)
+@click.option(
+    "--start-year", "-sy", type=int, default=datetime.now().year,
+    help="Year to start to get the race result"
+)
+@click.option(
+    "--start-month", "-sm", type=int,
+    help="Month to start to get the race result"
+)
+@click.option(
+    "--end-year", "-ey", type=int,
+    help="Year to end to get the race result"
+)
+@click.option(
+    "--end-month", "-em", type=int,
+    help="Month to end to get the race result"
+)
+def get_result(
+    name, track, place, course_situation, race_conditions, horse_age,
+    grade, distance_from, distance_to,
+    start_year, start_month, end_year, end_month
+):
     """Getting the race result of JRA horse racing
     """
     params = {
         netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
         netkeiba.url_params.WORD: name,
+        netkeiba.url_params.TRACK: track,
+        netkeiba.url_params.PLACE: place,
+        netkeiba.url_params.COURSE_SITUATION: course_situation,
+        netkeiba.url_params.RACE_CONDITIONS: race_conditions,
+        netkeiba.url_params.HORSE_AGE: horse_age,
+        netkeiba.url_params.GRADE: grade,
+        netkeiba.url_params.DISTANCE_FROM: distance_from,
+        netkeiba.url_params.DISTANCE_TO: distance_to,
         netkeiba.url_params.START_YEAR: start_year,
         netkeiba.url_params.START_MONTH: start_month,
         netkeiba.url_params.END_YEAR: end_year,
