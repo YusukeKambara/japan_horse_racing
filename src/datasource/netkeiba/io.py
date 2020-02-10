@@ -29,7 +29,7 @@ JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name",
 # Returning DataFrame column types
 JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "course_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex": "str", "horse_age": "int", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
-URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "DISTANCE_FROM", "DISTANCE_TO", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
+URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "DISTANCE_FROM", "DISTANCE_TO", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "SORT", "LIST"))
 url_params = URL_PARAMS(
     PID = "pid",
     WORD = "word",
@@ -45,9 +45,7 @@ url_params = URL_PARAMS(
     START_MONTH = "start_mon",
     END_YEAR = "end_year",
     END_MONTH = "end_mon",
-    PAGE = "page",
-    SORT_KEY = "sort",
-    SORT_TYPE = "sort_type",
+    SORT = "sort",
     LIST = "list"
 )
 PID_LIST = namedtuple("PID_LIST", ("RACE", "RACE_LIST", "JOCKEY", "JOCKEY_LIST", "HORSE", "HORSE_LIST", "TRAINER", "TRAINER_LIST"))
@@ -140,7 +138,7 @@ def requests_retry_session(
 ##############################################################################
 # Functions for getting the history data
 ##############################################################################
-def get_race_result(params):
+def get_race_result(params, return_df=None, page=1):
     # Create URL parameters for getting horse racing results
     params_track = None
     params_place = None
@@ -150,51 +148,53 @@ def get_race_result(params):
     params_grade = None
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
-    params[url_params.SORT_KEY] = "name"
+    params[url_params.SORT] = "name"
     params[url_params.LIST] = 100
     if url_params.WORD in params.keys():
         params[url_params.WORD] = str(
             params[url_params.WORD].encode("EUC-JP")
         )[2:-1].replace("\\x", "%")
-    # Convert array parameters to be able to use URL parameters
-    if url_params.TRACK in params.keys():
-        params_track = "&".join([
-            url_params.TRACK + "=" + eval("track_list." + val)
-            for val in params[url_params.TRACK]
-        ])
-        del params[url_params.TRACK]
-    if url_params.PLACE in params.keys():
-        params_track = "&".join([
-            url_params.PLACE + "=" + eval("place_list." + val)
-            for val in params[url_params.PLACE]
-        ])
-        del params[url_params.PLACE]
-    if url_params.COURSE_SITUATION in params.keys():
-        params_course_situation = "&".join([
-            url_params.COURSE_SITUATION + "=" + eval("course_situation_list." + val)
-            for val in params[url_params.COURSE_SITUATION]
-        ])
-        del params[url_params.COURSE_SITUATION]
-    if url_params.RACE_CONDITIONS in params.keys():
-        params_race_conditions = "&".join([
-            url_params.RACE_CONDITIONS + "=" + eval("race_conditions_list." + val)
-            for val in params[url_params.RACE_CONDITIONS]
-        ])
-        del params[url_params.RACE_CONDITIONS]
-    if url_params.HORSE_AGE in params.keys():
-        params_horse_age = "&".join([
-            url_params.HORSE_AGE + "=" + eval("horse_age_list." + val)
-            for val in params[url_params.HORSE_AGE]
-        ])
-        del params[url_params.HORSE_AGE]
-    if url_params.GRADE in params.keys():
-        params_grade = "&".join([
-            url_params.GRADE + "=" + eval("grade_list." + val)
-            for val in params[url_params.GRADE]
-        ])
-        del params[url_params.GRADE]
+    # print(params)
+    # # Convert array parameters to be able to use URL parameters
+    # if url_params.TRACK in params.keys():
+    #     params_track = "&".join([
+    #         url_params.TRACK + "=" + eval("track_list." + val)
+    #         for val in params[url_params.TRACK]
+    #     ])
+    #     del params[url_params.TRACK]
+    # if url_params.PLACE in params.keys():
+    #     params_track = "&".join([
+    #         url_params.PLACE + "=" + eval("place_list." + val)
+    #         for val in params[url_params.PLACE]
+    #     ])
+    #     del params[url_params.PLACE]
+    # if url_params.COURSE_SITUATION in params.keys():
+    #     params_course_situation = "&".join([
+    #         url_params.COURSE_SITUATION + "=" + eval("course_situation_list." + val)
+    #         for val in params[url_params.COURSE_SITUATION]
+    #     ])
+    #     del params[url_params.COURSE_SITUATION]
+    # if url_params.RACE_CONDITIONS in params.keys():
+    #     params_race_conditions = "&".join([
+    #         url_params.RACE_CONDITIONS + "=" + eval("race_conditions_list." + val)
+    #         for val in params[url_params.RACE_CONDITIONS]
+    #     ])
+    #     del params[url_params.RACE_CONDITIONS]
+    # if url_params.HORSE_AGE in params.keys():
+    #     params_horse_age = "&".join([
+    #         url_params.HORSE_AGE + "=" + eval("horse_age_list." + val)
+    #         for val in params[url_params.HORSE_AGE]
+    #     ])
+    #     del params[url_params.HORSE_AGE]
+    # if url_params.GRADE in params.keys():
+    #     params_grade = "&".join([
+    #         url_params.GRADE + "=" + eval("grade_list." + val)
+    #         for val in params[url_params.GRADE]
+    #     ])
+    #     del params[url_params.GRADE]
     # Create the requesting URL by using above params
     req_url = BASE_URL + "/?" + urllib.parse.urlencode(params)
+    # print(req_url)
     if params_track:
         req_url += "&" + params_track
     if params_place:
@@ -208,9 +208,20 @@ def get_race_result(params):
     if params_grade:
         req_url += "&" + params_grade
     # Get the response by using the converted URL
-    r = requests_retry_session().get(req_url)
+    # r = requests_retry_session().post(req_url, data={"sort": {"page": str(page), "sort_key": "name", "sort_type": "asc"}})
+    # r = requests_retry_session().get(req_url)
+    r = requests_retry_session().get(BASE_URL, params=params)
+    print(r.url)
     soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
     r.connection.close()
+    # # Get the pager information
+    # all_items, curren_items = re.findall(
+    #     r"[0-9,]*件", soup.find_all("div", class_="pager")[0].text
+    # )
+    # all_items = int(all_items.replace("件", "").replace(",", ""))
+    # curren_items = int(curren_items.replace("件", "").replace(",", ""))
+    # print(all_items, curren_items)
+    # Get and convert the race-result data
     parsed_table = soup.find_all("table")[0]
     df = pd.read_html(str(parsed_table))[0]
     if not (len(RACE_RESULT_HEADER) == len(df.columns)):
@@ -247,7 +258,16 @@ def get_race_result(params):
     df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
     df["year"] = df["date"].apply(lambda x: x.year)
     # Return the DataFrame
-    return df
+    if return_df is None:
+        return_df = df
+    else:
+        return_df = pd.concat([return_df, df], ignore_index=True, sort=False)
+    # Loop to until getting all page data
+    # if all_items > curren_items:
+    #     get_race_result(params, return_df=return_df, page=page + 1)
+    # else:
+    #     return return_df
+    return return_df
         
 def get_race_details(details_url):
     r = requests_retry_session().get(details_url)

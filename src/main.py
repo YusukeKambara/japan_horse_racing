@@ -131,12 +131,26 @@ def get_result(
     params = {
         netkeiba.url_params.PID: netkeiba.pid_list.RACE_LIST,
         netkeiba.url_params.WORD: name,
-        netkeiba.url_params.TRACK: track,
-        netkeiba.url_params.PLACE: place,
-        netkeiba.url_params.COURSE_SITUATION: course_situation,
-        netkeiba.url_params.RACE_CONDITIONS: race_conditions,
-        netkeiba.url_params.HORSE_AGE: horse_age,
-        netkeiba.url_params.GRADE: grade,
+        netkeiba.url_params.TRACK: [
+            eval("netkeiba.track_list." + val) for val in track
+        ],
+        netkeiba.url_params.PLACE: [
+            eval("netkeiba.place_list." + val) for val in place
+        ],
+        netkeiba.url_params.COURSE_SITUATION: [
+            eval("netkeiba.course_situation_list." + val)
+            for val in course_situation
+        ],
+        netkeiba.url_params.RACE_CONDITIONS: [
+            eval("netkeiba.race_conditions_list." + val)
+            for val in race_conditions
+        ],
+        netkeiba.url_params.HORSE_AGE: [
+            eval("netkeiba.horse_age_list." + val) for val in horse_age
+        ],
+        netkeiba.url_params.GRADE: [
+            eval("netkeiba.grade_list." + val) for val in grade
+        ],
         netkeiba.url_params.DISTANCE_FROM: distance_from,
         netkeiba.url_params.DISTANCE_TO: distance_to,
         netkeiba.url_params.START_YEAR: start_year,
@@ -144,6 +158,7 @@ def get_result(
         netkeiba.url_params.END_YEAR: end_year,
         netkeiba.url_params.END_MONTH: end_month
     }
+    print(params)
     results = commands_race.get_result(params)
     print(results)
     return results
