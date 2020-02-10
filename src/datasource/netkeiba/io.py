@@ -140,12 +140,6 @@ def requests_retry_session(
 ##############################################################################
 def get_race_result(params, return_df=None, page=1):
     # Create URL parameters for getting horse racing results
-    params_track = None
-    params_place = None
-    params_course_situation = None
-    params_race_conditions = None
-    params_horse_age = None
-    params_grade = None
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
     params[url_params.SORT] = "name"
@@ -154,64 +148,9 @@ def get_race_result(params, return_df=None, page=1):
         params[url_params.WORD] = str(
             params[url_params.WORD].encode("EUC-JP")
         )[2:-1].replace("\\x", "%")
-    # print(params)
-    # # Convert array parameters to be able to use URL parameters
-    # if url_params.TRACK in params.keys():
-    #     params_track = "&".join([
-    #         url_params.TRACK + "=" + eval("track_list." + val)
-    #         for val in params[url_params.TRACK]
-    #     ])
-    #     del params[url_params.TRACK]
-    # if url_params.PLACE in params.keys():
-    #     params_track = "&".join([
-    #         url_params.PLACE + "=" + eval("place_list." + val)
-    #         for val in params[url_params.PLACE]
-    #     ])
-    #     del params[url_params.PLACE]
-    # if url_params.COURSE_SITUATION in params.keys():
-    #     params_course_situation = "&".join([
-    #         url_params.COURSE_SITUATION + "=" + eval("course_situation_list." + val)
-    #         for val in params[url_params.COURSE_SITUATION]
-    #     ])
-    #     del params[url_params.COURSE_SITUATION]
-    # if url_params.RACE_CONDITIONS in params.keys():
-    #     params_race_conditions = "&".join([
-    #         url_params.RACE_CONDITIONS + "=" + eval("race_conditions_list." + val)
-    #         for val in params[url_params.RACE_CONDITIONS]
-    #     ])
-    #     del params[url_params.RACE_CONDITIONS]
-    # if url_params.HORSE_AGE in params.keys():
-    #     params_horse_age = "&".join([
-    #         url_params.HORSE_AGE + "=" + eval("horse_age_list." + val)
-    #         for val in params[url_params.HORSE_AGE]
-    #     ])
-    #     del params[url_params.HORSE_AGE]
-    # if url_params.GRADE in params.keys():
-    #     params_grade = "&".join([
-    #         url_params.GRADE + "=" + eval("grade_list." + val)
-    #         for val in params[url_params.GRADE]
-    #     ])
-    #     del params[url_params.GRADE]
-    # Create the requesting URL by using above params
-    req_url = BASE_URL + "/?" + urllib.parse.urlencode(params)
-    # print(req_url)
-    if params_track:
-        req_url += "&" + params_track
-    if params_place:
-        req_url += "&" + params_place
-    if params_course_situation:
-        req_url += "&" + params_course_situation
-    if params_race_conditions:
-        req_url += "&" + params_race_conditions
-    if params_horse_age:
-        req_url += "&" + params_horse_age
-    if params_grade:
-        req_url += "&" + params_grade
     # Get the response by using the converted URL
     # r = requests_retry_session().post(req_url, data={"sort": {"page": str(page), "sort_key": "name", "sort_type": "asc"}})
-    # r = requests_retry_session().get(req_url)
     r = requests_retry_session().get(BASE_URL, params=params)
-    print(r.url)
     soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
     r.connection.close()
     # # Get the pager information
