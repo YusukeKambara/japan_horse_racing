@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 import urllib.parse
@@ -5,6 +6,8 @@ import pandas as pd
 from datetime import datetime
 from collections import namedtuple
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -29,7 +32,7 @@ JOINED_RESULT_DETAILS_HEADER = ["year", "date", "place", "weather", "race_name",
 # Returning DataFrame column types
 JOINED_RESULT_DETAILS_TYPES = {"year": "int", "date": "str", "place": "str", "weather": "str", "race_name": "str", "distance": "str", "horses": "str", "course_situation": "str", "arrival_order": "str", "frame_number": "str", "horse_number": "str", "horse_name": "str", "horse_sex": "str", "horse_age": "int", "loaf_weight": "str", "jockey_name": "str", "time": "str", "arrival_difference": "str", "odds": "str", "favorite": "str", "horse_weight": "integer", "horse_changed_weight": "int", "trainer_name": "str", "race_details_url": "str", "horse_details_url": "str", "jockey_details_url": "str", "trainer_details_url": "str"}
 # NamedTuple for URL parameters
-URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "DISTANCE_FROM", "DISTANCE_TO", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "PAGE", "SORT_KEY", "SORT_TYPE", "LIST"))
+URL_PARAMS = namedtuple("URL_PARAMS", ("PID", "WORD", "TRACK", "PLACE", "COURSE_SITUATION", "RACE_CONDITIONS", "HORSE_AGE", "GRADE", "DISTANCE_FROM", "DISTANCE_TO", "START_YEAR", "START_MONTH", "END_YEAR", "END_MONTH", "SORT", "LIST"))
 url_params = URL_PARAMS(
     PID = "pid",
     WORD = "word",
@@ -45,9 +48,7 @@ url_params = URL_PARAMS(
     START_MONTH = "start_mon",
     END_YEAR = "end_year",
     END_MONTH = "end_mon",
-    PAGE = "page",
-    SORT_KEY = "sort",
-    SORT_TYPE = "sort_type",
+    SORT = "sort",
     LIST = "list"
 )
 PID_LIST = namedtuple("PID_LIST", ("RACE", "RACE_LIST", "JOCKEY", "JOCKEY_LIST", "HORSE", "HORSE_LIST", "TRAINER", "TRAINER_LIST"))
@@ -142,112 +143,83 @@ def requests_retry_session(
 ##############################################################################
 def get_race_result(params):
     # Create URL parameters for getting horse racing results
-    params_track = None
-    params_place = None
-    params_course_situation = None
-    params_race_conditions = None
-    params_horse_age = None
-    params_grade = None
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
-    params[url_params.SORT_KEY] = "name"
+    params[url_params.SORT] = "name"
     params[url_params.LIST] = 100
     if url_params.WORD in params.keys():
         params[url_params.WORD] = str(
             params[url_params.WORD].encode("EUC-JP")
         )[2:-1].replace("\\x", "%")
-    # Convert array parameters to be able to use URL parameters
-    if url_params.TRACK in params.keys():
-        params_track = "&".join([
-            url_params.TRACK + "=" + eval("track_list." + val)
-            for val in params[url_params.TRACK]
-        ])
-        del params[url_params.TRACK]
-    if url_params.PLACE in params.keys():
-        params_track = "&".join([
-            url_params.PLACE + "=" + eval("place_list." + val)
-            for val in params[url_params.PLACE]
-        ])
-        del params[url_params.PLACE]
-    if url_params.COURSE_SITUATION in params.keys():
-        params_course_situation = "&".join([
-            url_params.COURSE_SITUATION + "=" + eval("course_situation_list." + val)
-            for val in params[url_params.COURSE_SITUATION]
-        ])
-        del params[url_params.COURSE_SITUATION]
-    if url_params.RACE_CONDITIONS in params.keys():
-        params_race_conditions = "&".join([
-            url_params.RACE_CONDITIONS + "=" + eval("race_conditions_list." + val)
-            for val in params[url_params.RACE_CONDITIONS]
-        ])
-        del params[url_params.RACE_CONDITIONS]
-    if url_params.HORSE_AGE in params.keys():
-        params_horse_age = "&".join([
-            url_params.HORSE_AGE + "=" + eval("horse_age_list." + val)
-            for val in params[url_params.HORSE_AGE]
-        ])
-        del params[url_params.HORSE_AGE]
-    if url_params.GRADE in params.keys():
-        params_grade = "&".join([
-            url_params.GRADE + "=" + eval("grade_list." + val)
-            for val in params[url_params.GRADE]
-        ])
-        del params[url_params.GRADE]
-    # Create the requesting URL by using above params
-    req_url = BASE_URL + "/?" + urllib.parse.urlencode(params)
-    if params_track:
-        req_url += "&" + params_track
-    if params_place:
-        req_url += "&" + params_place
-    if params_course_situation:
-        req_url += "&" + params_course_situation
-    if params_race_conditions:
-        req_url += "&" + params_race_conditions
-    if params_horse_age:
-        req_url += "&" + params_horse_age
-    if params_grade:
-        req_url += "&" + params_grade
-    # Get the response by using the converted URL
-    r = requests_retry_session().get(req_url)
-    soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
-    r.connection.close()
-    parsed_table = soup.find_all("table")[0]
-    df = pd.read_html(str(parsed_table))[0]
-    if not (len(RACE_RESULT_HEADER) == len(df.columns)):
-        return None
-    df.columns = RACE_RESULT_HEADER
-    # Remove needless charactor in the [place] column
-    df["place"] = df["place"].replace("[0-9]", "", regex=True)
-    # Adding the url of race_name
-    df["race_details_url"] = [
-        "".join([
-            BASE_URL + link.get("href")
-            for link in tag.find_all("a") 
-            if re.match("\/race\/[0-9]+", link.get("href"))
-        ])
-        for tag in parsed_table.find_all("tr")
-    ][1:]
-    # Separate the complex data columns
-    df["grade"] = df["race_name"].apply(
-        lambda x: re.search(r"G[1-3]", x).group().replace("G", "")
-        if re.search(r"G[1-3]", x) else None
-    )
-    df["race_name"] = df["race_name"].replace(
-        "[(]G[1-3][)]|[(]OP[)]", "", regex=True
-    )
-    cource_kind_dict = {"芝": "turf", "ダ": "dirt", "障": "hurdle"}
-    df["race_category"] = df["distance"].apply(
-        lambda x: cource_kind_dict[x[:1]]
-        if not x[:1].isdecimal() else None
-    )
-    df["distance"] = df["distance"].apply(
-        lambda x: x[1:] if not x[:1].isdecimal() else x
-    )
-    # Convert type of date column
-    df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
-    df["year"] = df["date"].apply(lambda x: x.year)
-    # Return the DataFrame
-    return df
+    # Selenium settings
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--log-level=3")
+    driver = webdriver.Chrome(options=options)
+    # Get a HTML response
+    driver.get(BASE_URL + "/?" + urllib.parse.urlencode(params, doseq=True))
+    page = 1
+    return_df = None
+    while True:
+        if page > 1:
+            driver.execute_script("javascript:paging('{}')".format(str(page)))
+        html = driver.page_source.encode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+        # Get the pager information
+        all_items, curren_items = re.findall(
+            r"[0-9,]*件", soup.find_all("div", class_="pager")[0].text
+        )
+        all_items = int(all_items.replace("件", "").replace(",", ""))
+        curren_items = int(curren_items.replace("件", "").replace(",", ""))
+        print(all_items, curren_items)
+        # Get and convert the race-result data
+        parsed_table = soup.find_all("table")[0]
+        df = pd.read_html(str(parsed_table))[0]
+        if not (len(RACE_RESULT_HEADER) == len(df.columns)):
+            return None
+        df.columns = RACE_RESULT_HEADER
+        # Remove needless charactor in the [place] column
+        df["place"] = df["place"].replace("[0-9]", "", regex=True)
+        # Adding the url of race_name
+        df["race_details_url"] = [
+            "".join([
+                BASE_URL + link.get("href")
+                for link in tag.find_all("a") 
+                if re.match("\/race\/[0-9]+", link.get("href"))
+            ])
+            for tag in parsed_table.find_all("tr")
+        ][1:]
+        # Separate the complex data columns
+        df["grade"] = df["race_name"].apply(
+            lambda x: re.search(r"G[1-3]", x).group().replace("G", "")
+            if re.search(r"G[1-3]", x) else None
+        )
+        df["race_name"] = df["race_name"].replace(
+            "[(]G[1-3][)]|[(]OP[)]", "", regex=True
+        )
+        cource_kind_dict = {"芝": "turf", "ダ": "dirt", "障": "hurdle"}
+        df["race_category"] = df["distance"].apply(
+            lambda x: cource_kind_dict[x[:1]]
+            if str(x)[:1] in cource_kind_dict.keys() else None
+        )
+        df["distance"] = df["distance"].fillna("").apply(
+            lambda x: x[1:] if str(x)[:1] in cource_kind_dict.keys() else x
+        )
+        # Convert type of date column
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+        df["year"] = df["date"].apply(lambda x: x.year)
+        # Return the DataFrame
+        if return_df is None:
+            return_df = df
+        else:
+            return_df = pd.concat([return_df, df], ignore_index=True, sort=False)
+        # Loop to until getting all page data
+        if all_items <= curren_items:
+            break
+        else:
+            page += 1
+    driver.quit()
+    return return_df
         
 def get_race_details(details_url):
     r = requests_retry_session().get(details_url)
