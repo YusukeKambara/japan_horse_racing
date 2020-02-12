@@ -158,7 +158,6 @@ def get_result(
         netkeiba.url_params.END_YEAR: end_year,
         netkeiba.url_params.END_MONTH: end_month
     }
-    print(params)
     results = commands_race.get_result(params)
     print(results)
     return results

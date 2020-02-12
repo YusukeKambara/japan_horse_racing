@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 import urllib.parse
@@ -5,6 +6,8 @@ import pandas as pd
 from datetime import datetime
 from collections import namedtuple
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -138,7 +141,7 @@ def requests_retry_session(
 ##############################################################################
 # Functions for getting the history data
 ##############################################################################
-def get_race_result(params, return_df=None, page=1):
+def get_race_result(params):
     # Create URL parameters for getting horse racing results
     params = {key: params[key] for key in params if params[key]}
     params[url_params.PID] = pid_list.RACE_LIST
@@ -148,64 +151,74 @@ def get_race_result(params, return_df=None, page=1):
         params[url_params.WORD] = str(
             params[url_params.WORD].encode("EUC-JP")
         )[2:-1].replace("\\x", "%")
-    # Get the response by using the converted URL
-    # r = requests_retry_session().post(req_url, data={"sort": {"page": str(page), "sort_key": "name", "sort_type": "asc"}})
-    r = requests_retry_session().get(BASE_URL, params=params)
-    soup = BeautifulSoup(r.text.encode(r.encoding), "lxml")
-    r.connection.close()
-    # # Get the pager information
-    # all_items, curren_items = re.findall(
-    #     r"[0-9,]*件", soup.find_all("div", class_="pager")[0].text
-    # )
-    # all_items = int(all_items.replace("件", "").replace(",", ""))
-    # curren_items = int(curren_items.replace("件", "").replace(",", ""))
-    # print(all_items, curren_items)
-    # Get and convert the race-result data
-    parsed_table = soup.find_all("table")[0]
-    df = pd.read_html(str(parsed_table))[0]
-    if not (len(RACE_RESULT_HEADER) == len(df.columns)):
-        return None
-    df.columns = RACE_RESULT_HEADER
-    # Remove needless charactor in the [place] column
-    df["place"] = df["place"].replace("[0-9]", "", regex=True)
-    # Adding the url of race_name
-    df["race_details_url"] = [
-        "".join([
-            BASE_URL + link.get("href")
-            for link in tag.find_all("a") 
-            if re.match("\/race\/[0-9]+", link.get("href"))
-        ])
-        for tag in parsed_table.find_all("tr")
-    ][1:]
-    # Separate the complex data columns
-    df["grade"] = df["race_name"].apply(
-        lambda x: re.search(r"G[1-3]", x).group().replace("G", "")
-        if re.search(r"G[1-3]", x) else None
-    )
-    df["race_name"] = df["race_name"].replace(
-        "[(]G[1-3][)]|[(]OP[)]", "", regex=True
-    )
-    cource_kind_dict = {"芝": "turf", "ダ": "dirt", "障": "hurdle"}
-    df["race_category"] = df["distance"].apply(
-        lambda x: cource_kind_dict[x[:1]]
-        if not x[:1].isdecimal() else None
-    )
-    df["distance"] = df["distance"].apply(
-        lambda x: x[1:] if not x[:1].isdecimal() else x
-    )
-    # Convert type of date column
-    df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
-    df["year"] = df["date"].apply(lambda x: x.year)
-    # Return the DataFrame
-    if return_df is None:
-        return_df = df
-    else:
-        return_df = pd.concat([return_df, df], ignore_index=True, sort=False)
-    # Loop to until getting all page data
-    # if all_items > curren_items:
-    #     get_race_result(params, return_df=return_df, page=page + 1)
-    # else:
-    #     return return_df
+    # Selenium settings
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--log-level=3")
+    driver = webdriver.Chrome(options=options)
+    # Get a HTML response
+    driver.get(BASE_URL + "/?" + urllib.parse.urlencode(params, doseq=True))
+    page = 1
+    return_df = None
+    while True:
+        if page > 1:
+            driver.execute_script("javascript:paging('{}')".format(str(page)))
+        html = driver.page_source.encode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+        # Get the pager information
+        all_items, curren_items = re.findall(
+            r"[0-9,]*件", soup.find_all("div", class_="pager")[0].text
+        )
+        all_items = int(all_items.replace("件", "").replace(",", ""))
+        curren_items = int(curren_items.replace("件", "").replace(",", ""))
+        print(all_items, curren_items)
+        # Get and convert the race-result data
+        parsed_table = soup.find_all("table")[0]
+        df = pd.read_html(str(parsed_table))[0]
+        if not (len(RACE_RESULT_HEADER) == len(df.columns)):
+            return None
+        df.columns = RACE_RESULT_HEADER
+        # Remove needless charactor in the [place] column
+        df["place"] = df["place"].replace("[0-9]", "", regex=True)
+        # Adding the url of race_name
+        df["race_details_url"] = [
+            "".join([
+                BASE_URL + link.get("href")
+                for link in tag.find_all("a") 
+                if re.match("\/race\/[0-9]+", link.get("href"))
+            ])
+            for tag in parsed_table.find_all("tr")
+        ][1:]
+        # Separate the complex data columns
+        df["grade"] = df["race_name"].apply(
+            lambda x: re.search(r"G[1-3]", x).group().replace("G", "")
+            if re.search(r"G[1-3]", x) else None
+        )
+        df["race_name"] = df["race_name"].replace(
+            "[(]G[1-3][)]|[(]OP[)]", "", regex=True
+        )
+        cource_kind_dict = {"芝": "turf", "ダ": "dirt", "障": "hurdle"}
+        df["race_category"] = df["distance"].apply(
+            lambda x: cource_kind_dict[x[:1]]
+            if str(x)[:1] in cource_kind_dict.keys() else None
+        )
+        df["distance"] = df["distance"].fillna("").apply(
+            lambda x: x[1:] if str(x)[:1] in cource_kind_dict.keys() else x
+        )
+        # Convert type of date column
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+        df["year"] = df["date"].apply(lambda x: x.year)
+        # Return the DataFrame
+        if return_df is None:
+            return_df = df
+        else:
+            return_df = pd.concat([return_df, df], ignore_index=True, sort=False)
+        # Loop to until getting all page data
+        if all_items <= curren_items:
+            break
+        else:
+            page += 1
+    driver.quit()
     return return_df
         
 def get_race_details(details_url):
